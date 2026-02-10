@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reaction Timer Game</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: #2ecc71;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+#game {
+  background: #222;
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 0 20px black;
+}
+
+#screen {
+  height: 120px;
+  background: gray;
+  margin: 15px 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  user-select: none;
+}
+
+.wait {
+  background: red;
+}
+
+.ready {
+  background: limegreen;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  background: #2196f3;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #1976d2;
+}
+
+.stats {
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+  <h2>⚡ Reaction Timer ⚡</h2>
+
+  <div id="screen">
+    Click Start
+  </div>
+
+  <button id="startBtn">Start</button>
+  <button id="resetBtn">Reset</button>
+
+  <div class="stats">
+    Last: <span id="last">--</span> ms<br>
+    Best: <span id="best">--</span> ms
+  </div>
+
+</div>
+
+<script>
+
+const screen = document.getElementById("screen");
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const lastEl = document.getElementById("last");
+const bestEl = document.getElementById("best");
+
+let state = "idle"; // idle, waiting, ready
+let startTime = 0;
+let timer = null;
+
+let best = localStorage.getItem("bestTime") || null;
+
+// Show saved best
+if(best){
+  bestEl.textContent = best;
+}
+
+// Start game
+function startGame(){
+
+  if(state !== "idle") return;
+
+  state = "waiting";
+  screen.textContent = "Wait...";
+  screen.className = "wait";
+
+  const delay = Math.random() * 3000 + 2000;
+
+  timer = setTimeout(() => {
+
+    state = "ready";
+    startTime = performance.now();
+
+    screen.textContent = "CLICK!";
+    screen.className = "ready";
+
+  }, delay);
+
+}
+
+// Reset game
+function resetGame(){
+
+  clearTimeout(timer);
+
+  state = "idle";
+
+  screen.textContent = "Click Start";
+  screen.className = "";
+
+  lastEl.textContent = "--";
+
+}
+
+// Click screen
+screen.addEventListener("click", () => {
+
+  // Clicked too early
+  if(state === "waiting"){
+
+    clearTimeout(timer);
+
+    state = "idle";
+
+    screen.textContent = "Too Soon!";
+    screen.className = "";
+
+    return;
+  }
+
+  // Correct click
+  if(state === "ready"){
+
+    const time = Math.round(performance.now() - startTime);
+
+    lastEl.textContent = time;
+
+    // Save best
+    if(!best || time < best){
+
+      best = time;
+      bestEl.textContent = best;
+
+      localStorage.setItem("bestTime", best);
+    }
+
+    state = "idle";
+
+    screen.textContent = "Nice!";
+    screen.className = "";
+
+  }
+
+});
+
+// Buttons
+startBtn.addEventListener("click", startGame);
+resetBtn.addEventListener("click", resetGame);
+
+</script>
+
+</body>
+</html>
